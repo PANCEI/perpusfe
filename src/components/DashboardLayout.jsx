@@ -3,53 +3,67 @@ import Sidebar from './Sidebar';
 import { Bell, Menu } from 'lucide-react';
 
 const DashboardLayout = ({ children, role, userTitle }) => {
-  const [isOpen, setIsOpen] = useState(false); // State sidebar mobile (open/close)
+  // Set default true agar langsung terbuka di layar laptop saat pertama kali dimuat
+  const [isOpen, setIsOpen] = useState(true); 
   const [paddingLeft, setPaddingLeft] = useState(256);
 
-  // Sinkronisasi padding konten utama dengan lebar asli elemen sidebar di desktop
+  // Sesuaikan status awal jika diakses via perangkat mobile sejak awal
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setIsOpen(false);
+    }
+  }, []);
+
+  // Memantau perubahan ukuran sidebar secara real-time (baik karena di-resize maupun di-toggle)
   useEffect(() => {
     const updatePadding = () => {
-      if (window.innerWidth >= 1024) {
-        // Cari elemen sidebar berdasarkan kelas atau struktur style-nya
-        const sidebarEl = document.querySelector('.h-screen.border-r');
-        if (sidebarEl) {
-          setPaddingLeft(sidebarEl.offsetWidth);
-        }
+      const sidebarEl = document.querySelector('.sidebar-container');
+      if (sidebarEl) {
+        // Ketika sidebar ditutup (di-translate keluar), offsetWidth atau bounding client akan bernilai 0
+        const isHidden = sidebarEl.getBoundingClientRect().left < 0;
+        setPaddingLeft(isHidden ? 0 : sidebarEl.offsetWidth);
       } else {
-        setPaddingLeft(0); // Di mobile, konten utama memenuhi layar penuh
+        setPaddingLeft(0);
       }
     };
 
-    // Jalankan pengecekan berkala singkat atau pasang resize observer
+    // Daftarkan ke ResizeObserver untuk memantau pergeseran piksel saat di-resize
     const observer = new ResizeObserver(updatePadding);
-    const sidebarEl = document.querySelector('.h-screen.border-r');
+    const sidebarEl = document.querySelector('.sidebar-container');
     if (sidebarEl) observer.observe(sidebarEl);
 
     window.addEventListener('resize', updatePadding);
+    
+    // Gunakan interval kecil/requestAnimationFrame untuk memastikan transisi pergeseran terpantau mulus
+    const transitionInterval = setInterval(updatePadding, 30);
+    setTimeout(() => clearInterval(transitionInterval), 400);
+
     updatePadding();
 
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', updatePadding);
+      clearInterval(transitionInterval);
     };
-  }, []);
+  }, [isOpen]); // Memicu kalkulasi ulang setiap kali tombol toggle ditekan
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Komponen Sidebar bawaan */}
+    <div className="min-h-screen bg-slate-50 flex overflow-x-hidden">
+      {/* Komponen Sidebar */}
       <Sidebar role={role} isOpen={isOpen} setIsOpen={setIsOpen} />
       
-      {/* Konten Utama */}
+      {/* Konten Utama: Menggunakan nilai paddingLeft murni dari hasil observasi */}
       <div 
-        style={{ paddingLeft: window.innerWidth >= 1024 ? `${paddingLeft}px` : '0px' }}
-        className="flex-1 flex flex-col min-w-0 transition-all duration-150"
+        style={{ paddingLeft: `${paddingLeft}px` }}
+        className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out"
       >
-        <header className="flex justify-between items-center p-6 bg-white border-b border-slate-200 lg:bg-transparent lg:border-none lg:px-8 lg:pt-8 lg:pb-4">
+        <header className="flex justify-between items-center p-6 bg-white border-b border-slate-200 lg:px-8 lg:pt-8 lg:pb-4 lg:bg-transparent lg:border-none">
           <div className="flex items-center gap-4">
-            {/* Tombol Hamburger Menu - Hanya muncul di Mobile */}
+            {/* Tombol Burger Menu - Aktif di semua ukuran layar (Lg hidden dihapus) */}
             <button 
-              onClick={() => setIsOpen(true)}
-              className="lg:hidden p-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50"
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 shadow-sm transition-transform active:scale-95"
+              title={isOpen ? "Sembunyikan Sidebar" : "Tampilkan Sidebar"}
             >
               <Menu size={20} />
             </button>

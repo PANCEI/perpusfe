@@ -86,11 +86,11 @@ const Sidebar = ({ role, isOpen, setIsOpen }) => {
       )}
 
       {/* Kontainer Sidebar */}
-      <div 
-        style={{ width: window.innerWidth >= 1024 ? `${sidebarWidth}px` : '256px' }}
-        className={`bg-white h-screen border-r border-slate-200 flex flex-col fixed left-0 top-0 z-50 transition-transform lg:transition-none
-          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
-      >
+    <div 
+  style={{ width: window.innerWidth >= 1024 ? `${sidebarWidth}px` : '256px' }}
+  className={`sidebar-container bg-white h-screen border-r border-slate-200 flex flex-col fixed left-0 top-0 z-50 transition-transform duration-300 ease-in-out
+    ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+>
         {/* Header Sidebar */}
         <div className="p-6 flex items-center justify-between border-b border-slate-100">
           <div className="flex items-center gap-3">
@@ -134,10 +134,15 @@ const Sidebar = ({ role, isOpen, setIsOpen }) => {
         </div>
 
         {/* 🛠️ Handle untuk Resize (Hanya aktif di layar Desktop/Lg ke atas) */}
-        <div 
+        {/* <div 
           onMouseDown={startResizing}
           className="hidden lg:block absolute top-0 right-0 w-1.5 h-full cursor-ew-resize hover:bg-indigo-500/40 active:bg-indigo-600 transition-colors"
-        />
+        /> */}
+        {/* 🛠️ Handle untuk Resize: Sekarang aktif di semua resolusi laptop/layar */}
+<div 
+    onMouseDown={startResizing}
+    className="absolute top-0 right-0 w-1.5 h-full cursor-ew-resize hover:bg-indigo-500/40 active:bg-indigo-600 transition-colors z-50"
+  />
       </div>
     </>
   );
