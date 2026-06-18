@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { User, Lock } from 'lucide-react';
 import BackgroundDecoration from '../components/BackgroundDecoration';
 import InputField from '../components/InputField';
-import Button from '../components/ui/Button';
+import Button from '../components/Button';
 import SocialButton from '../components/SocialButton';
 
 export default function Login() {

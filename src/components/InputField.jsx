@@ -1,5 +1,5 @@
 import react, { useState } from 'react';
-import { eye, eyeOff } from 'lucide-react';
+import { User, Lock, Eye, EyeOff } from 'lucide-react';
 export default function InputField({
   label, 
   type = 'text', 
