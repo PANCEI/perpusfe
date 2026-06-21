@@ -1,9 +1,9 @@
 import axios from 'axios';
-
+import * as actionType from '../../constanta/actionTypes';
 // Ekspor fungsi login biasa tanpa kata kunci 'public'
 export const loginAction = (username, password) => {
     return dispatch => {
-        dispatch({ type: 'AUTH_LOGIN_START' });
+        dispatch({ type: actionType.AUTH_LOGIN_START });
 
         return axios.post('http://127.0.0.1:8000/api/login', {
             username,
@@ -14,7 +14,7 @@ export const loginAction = (username, password) => {
 
             // Simpan profil dan token ke auth reducer
             dispatch({
-                type: 'AUTH_LOGIN_SUCCESS',
+                type: actionType.AUTH_LOGIN_SUCCESS,
                 payload: { user, token }
             });
                 console.log(response);
@@ -24,7 +24,7 @@ export const loginAction = (username, password) => {
             const message = error.response?.data?.message || 'Login gagal';
 
             dispatch({
-                type: 'AUTH_LOGIN_FAIL',
+                type: actionType.AUTH_LOGIN_FAIL,
                 payload: message
             });
 
