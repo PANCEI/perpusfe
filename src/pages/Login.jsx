@@ -6,7 +6,7 @@ import BackgroundDecoration from '../components/BackgroundDecoration';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
 import SocialButton from '../components/SocialButton';
-
+import { loginAction } from '../actions/auth/authActions';
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -17,46 +17,62 @@ export default function Login() {
 
   // Membaca status loading global (jika ada) dari rootReducer -> auth
   const authState = useSelector((state) => state.auth);
+  console.log(authState);
   const isLoading = authState?.isLoading || false;
 
-  const handleSubmit = (e) => {
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   setLocalError('');
+
+  //   // 1. Beritahu Redux bahwa proses autentikasi dimulai
+  //   dispatch({ type: 'AUTH_LOGIN_START' });
+
+  //   // 2. Simulasi hit API backend korporat Anda
+  //   setTimeout(() => {
+  //     // Skenario Simulasi: Jika password diisi "salah", kita pancing error
+  //     if (password === 'salah') {
+  //       const errorMessage = 'Kredensial salah. Silakan periksa kembali nama pengguna dan kata sandi Anda.';
+        
+  //       dispatch({ type: 'AUTH_LOGIN_FAIL', payload: errorMessage });
+  //       setLocalError(errorMessage);
+  //       return;
+  //     }
+
+  //     // Skenario Sukses: Berikan data profil riil beserta role-nya
+  //     const mockApiResponse = {
+  //       user: {
+  //         name: "Aswar Hamid",
+  //         email: username.includes('@') ? username : "aswar@company.com",
+  //         role: "admin" // Akun ini otomatis akan membuka layout dashboard Super Admin
+  //       },
+  //       token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0..."
+  //     };
+
+  //     // 3. Dispatch data sukses untuk disimpan ke sessionStorage via rootReducer
+  //     dispatch({ 
+  //       type: 'AUTH_LOGIN_SUCCESS', 
+  //       payload: mockApiResponse 
+  //     });
+
+  //     // 4. Alihkan pengguna langsung ke halaman dashboard utama
+  //     navigate('/dashboard');
+
+  //   }, 1200); // Memberikan jeda 1.2 detik agar animasi loading tombol terlihat mapan
+  // };
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
 
-    // 1. Beritahu Redux bahwa proses autentikasi dimulai
-    dispatch({ type: 'AUTH_LOGIN_START' });
-
-    // 2. Simulasi hit API backend korporat Anda
-    setTimeout(() => {
-      // Skenario Simulasi: Jika password diisi "salah", kita pancing error
-      if (password === 'salah') {
-        const errorMessage = 'Kredensial salah. Silakan periksa kembali nama pengguna dan kata sandi Anda.';
-        
-        dispatch({ type: 'AUTH_LOGIN_FAIL', payload: errorMessage });
-        setLocalError(errorMessage);
-        return;
-      }
-
-      // Skenario Sukses: Berikan data profil riil beserta role-nya
-      const mockApiResponse = {
-        user: {
-          name: "Aswar Hamid",
-          email: username.includes('@') ? username : "aswar@company.com",
-          role: "admin" // Akun ini otomatis akan membuka layout dashboard Super Admin
-        },
-        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0..."
-      };
-
-      // 3. Dispatch data sukses untuk disimpan ke sessionStorage via rootReducer
-      dispatch({ 
-        type: 'AUTH_LOGIN_SUCCESS', 
-        payload: mockApiResponse 
-      });
-
-      // 4. Alihkan pengguna langsung ke halaman dashboard utama
+    try {
+      // Eksekusi Thunk Action lewat dispatch Redux
+      await dispatch(loginAction(username, password));
+      
+      // Jika sukses (tidak masuk ke block catch), langsung alihkan halaman
       navigate('/dashboard');
-
-    }, 1200); // Memberikan jeda 1.2 detik agar animasi loading tombol terlihat mapan
+    } catch (error) {
+      // Menangkap pesan error yang dilempar dari catch-nya authActions.js
+      setLocalError(error.message);
+    }
   };
 
   return (
@@ -131,50 +147,11 @@ export default function Login() {
           </Button>
         </form>
 
-        {/* Pembatas */}
-        <div className="relative my-6 flex items-center justify-center">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200"></div>
-          </div>
-          <span className="relative px-3 bg-white text-[11px] text-slate-400 uppercase tracking-wider font-medium">
-            Atau Masuk Dengan
-          </span>
-        </div>
+       
 
-        {/* Tombol Media Sosial */}
-        <div className="grid grid-cols-2 gap-3">
-          <SocialButton 
-            disabled={isLoading}
-            icon={
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.227C18.422 1.487 15.545 0 12.24 0 5.58 0 0 5.58 0 12.24s5.58 12.24 12.24 12.24c6.96 0 11.57-4.894 11.57-11.79 0-.795-.085-1.4-.195-2.405H12.24z"/>
-              </svg>
-            }
-          >
-            Google
-          </SocialButton>
+       
 
-          <SocialButton 
-            disabled={isLoading}
-            icon={
-              <svg className="w-4 h-4" fill="#1877F2" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
-            }
-          >
-            Facebook
-          </SocialButton>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-6">
-          <p className="text-xs text-slate-500">
-            Belum punya akun?{' '}
-            <a href="#register" className="font-bold text-cyan-600 hover:text-cyan-700 transition-colors">
-              Daftar Sekarang
-            </a>
-          </p>
-        </div>
+        
 
       </div>
     </div>

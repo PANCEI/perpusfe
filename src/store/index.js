@@ -55,7 +55,7 @@ import rootReducer from './rootReducer';
 const persistConfig = {
     key: 'perpustakaan_enterprise_root',
     storage: sessionStorage.default || sessionStorage,
-    whitelist: ['auth'] //ini ada dua whitelist dan blacklist  
+    whitelist: ['auth', 'menu'] //ini ada dua whitelist dan blacklist  
 };
 // bungkus rootreducer dengan konfigurasi persist
 const persistedReducer= persistReducer(persistConfig, rootReducer);

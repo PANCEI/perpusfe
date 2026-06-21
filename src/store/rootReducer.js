@@ -3,7 +3,7 @@ import {reducer as toastReducer} from 'react-redux-toastr'; // ini digunakan unt
 
 // import reducer authentikasi yang mengatur session login dan role
 import authReducer from './reducers/authReducers';
-
+import menuReducer from './reducers/menu/menuReducer';
 
 /**
  * rootReducer bertindak sebagai gerbang utama penyatuan state global aplikasi.
@@ -12,7 +12,8 @@ import authReducer from './reducers/authReducers';
  */
 const rootReducer = combineReducers({
     auth: authReducer,     // Menyimpan status login, token, dan role ('admin', 'staff', dll)
-    toastr: toastReducer  // Menyimpan data antrean popup notifikasi sistem
+    toastr: toastReducer,  // Menyimpan data antrean popup notifikasi sistem
+    menu:menuReducer  //menyimpan data me
 });
 
 export default rootReducer;
