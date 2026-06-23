@@ -17,13 +17,13 @@ class AuthController extends Controller
         // ]);
         // ambil data yang sudah tervalidasi
         $credentials = $request->validated();
-        $user = User::where('name', $credentials['username'])->first();
+       $user = User::with('akses')->where('name', $credentials['username'])->first();
         if(!$user){
-            $user= User::where('email', $credentials['username'])->first();
+            $user = User::with('akses')->where('email', $credentials['username'])->first();
         }
- return response()->json([
-        'data'=>$user
-        ]);
+//  return response()->json([
+//         'data'=>$user
+//         ]);
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
                 'status'  => 'error',
