@@ -24,15 +24,16 @@ class AuthController extends Controller
 //  return response()->json([
 //         'data'=>$user
 //         ]);
+//echo Hash::make($credentials['password']);
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Username atau password salah!'
+                'message' => Hash::make($credentials['password'])
             ], 401);
         }
-        return response()->json([
-        'data'=>'berhasii dapatkan  datanya'
-        ]);
+        // return response()->json([
+        // 'data'=>'berhasii dapatkan  datanya'
+        // ]);
         // 6. Terbitkan Token Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -43,7 +44,8 @@ class AuthController extends Controller
                 'id'       => $user->id,
                 'name'     => $user->name,
                 'username' => $user->username,
-                'role'     => $user->role,
+                'role'     => $user->akses->akses ? $user->akses->akses : '',
+                'id_role' =>$user->id_akses
             ],
             'token'   => $token
         ], 200);
