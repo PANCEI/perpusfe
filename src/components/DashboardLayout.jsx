@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from './Sidebar';
+// import Sidebar from './Sidebar';
+import Sidebar from './../components/sidebar/index';
 import { Bell, Menu } from 'lucide-react';
 
 const DashboardLayout = ({ children, role, userTitle }) => {
