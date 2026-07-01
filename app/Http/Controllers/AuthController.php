@@ -28,7 +28,8 @@ class AuthController extends Controller
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
                 'status'  => 'error',
-                'message' => Hash::make($credentials['password'])
+                // 'message' => Hash::make($credentials['password'])
+                'message' => 'Username atau password salah'
             ], 401);
         }
         // return response()->json([
