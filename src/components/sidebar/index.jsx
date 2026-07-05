@@ -18,7 +18,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   
   // Ambil data token untuk API Auth, dan data menu yang tersimpan di store Redux
   const token = useSelector((state) => state.auth.token);
-  const listMenuFromApi = useSelector((state) => state.menu.listMenu) || [];
+const listMenuFromApi = useSelector((state) => state.menu.menus) || [];
 
   // 📐 State untuk Pengubah Ukuran Lebar (Resize)
   const [sidebarWidth, setSidebarWidth] = useState(256);

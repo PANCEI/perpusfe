@@ -12,7 +12,7 @@ export const fetchUserMenus = (token) => {
         })
         .then(response => {
             const menusData = response.data.menus || response.data;
-
+            console.log("Data menu berhasil diambil:", menusData);
             dispatch({
                 type: 'SET_DYNAMIC_MENUS',
                 payload: menusData

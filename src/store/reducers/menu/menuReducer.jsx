@@ -12,7 +12,7 @@ switch (action.type){
         return {...state , menus:action.payload, isLoading:false , error :null};
     case 'GET_MENU_FAIL':
         return {...state , isLoading:false , error:action.payload};
-    case 'AUTH_LOGOUT':
+    case 'AUTH_LOG_OUT':
         return initialState;
     default:
         return state;
