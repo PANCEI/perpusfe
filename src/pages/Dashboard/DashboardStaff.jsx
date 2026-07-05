@@ -3,7 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 
 const DashboardStaff = () => {
   return (
-    <DashboardLayout role="Staff" userTitle="Staff Sarah">
+  
       <div className="space-y-6">
         <div className="grid grid-cols-4 gap-4">
           <div className="bg-blue-600 text-white p-6 rounded-2xl">
@@ -31,7 +31,7 @@ const DashboardStaff = () => {
           <div className="p-6 text-center text-slate-400">Tabel Sirkulasi Buku</div>
         </div>
       </div>
-    </DashboardLayout>
+  
   );
 };
 

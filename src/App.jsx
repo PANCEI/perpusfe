@@ -3,15 +3,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { useSelector } from 'react-redux';
 import ProtectedRoute from './routes/ProtectedRoute';
 import PublicRoutes from './routes/PublicRoutes';
-
+import DashboardLayout from './components/DashboardLayout';
 // 1. CODE SPLITTING (Lazy Loading)
-// Komponen hanya akan di-download oleh browser JIKA user membuka halaman tersebut.
 const Login = React.lazy(() => import('./pages/Login'));
 const DashboardAdmin = React.lazy(() => import('./pages/Dashboard/DashboardAdmin'));
 const DashboardStaff = React.lazy(() => import('./pages/Dashboard/DashboardStaff'));
-// const VehicleMaster = React.lazy(() => import('./pages/Logistics/VehicleMaster')); // Contoh halaman baru
 const Error403 = React.lazy(() => import('./pages/errors/Error403'));
-
+const MasterMenu = React.lazy(() => import('./pages/Master/Menu/Menu'));
+const Error404 = React.lazy(() => import('./pages/errors/Error404'));
 
 // Loading Placeholder khusus Enterprise
 const PageLoader = () => (
@@ -19,25 +18,47 @@ const PageLoader = () => (
     <div className="spinner">Memuat Halaman...</div>
   </div>
 );
+/**
+ * 🏢 DYNAMIC PAGE WRAPPER (Sekarang Otomatis Sinkron dengan Data Login User)
+ */
+const DynamicPageWrapper = ({ componentName }) => {
+  // 🚀 Ambil data user langsung dari Redux Store auth Anda
+  const user = useSelector((state) => state.auth.user);
 
-// 2. CENTRAL REGISTRY (Hanya memetakan fungsi import, bukan instance komponen)
+  const ComponentToRender = COMPONENT_REGISTRY[componentName] || <Navigate to="/404" replace />;
+  
+  // Jika rute lama (home / staff) yang menangani layout secara internal, langsung return
+  // if (componentName === 'home' || componentName === 'dashboard_staff') {
+  //   return ComponentToRender;
+  // }
+
+  // 🚀 JALUR DINAMIS: Ambil properti 'role' dan 'name' langsung dari JSON object login Anda
+  const currentRole = user?.role || "User";
+  const currentName = user?.name || "Guest";
+
+  return (
+    <DashboardLayout role={currentRole} userTitle={currentName}>
+      {ComponentToRender}
+    </DashboardLayout>
+  );
+};
+// 2. CENTRAL REGISTRY
 const COMPONENT_REGISTRY = {
   home: <DashboardAdmin />,
   dashboard_staff: <DashboardStaff />,
-
+  menu: <MasterMenu />, // 🚀 Key 'menu' disamakan dengan URL dari database
 };
 
 /**
  * 🛡️ 3. ENTERPRISE SECURITY MIDDLEWARE (Outer Guard)
  */
-/**
- * 🛡️ ENTERPRISE SECURITY MIDDLEWARE (Outer Guard)
- */
 const EnterpriseRouteGuard = ({ children }) => {
   const location = useLocation();
   const token = useSelector((state) => state.auth.token);
-  const userRole = useSelector((state) => state.auth.user?.role?.toLowerCase()); // 🚀 Ambil data role
-  const menus = useSelector((state) => state.menu.listMenu) || [];
+  const userRole = useSelector((state) => state.auth.user?.role?.toLowerCase());
+  
+  // 🚀 FIX 1: Ubah .listMenu menjadi .menus agar sinkron dengan Reducer Anda
+  const menus = useSelector((state) => state.menu.menus) || [];
   const currentUrl = location.pathname.substring(1).toLowerCase();
 
   // 🔒 BYPASS HANYA JIKA URL COCOK DENGAN ROLE USER (Saat data menu belum di-load)
@@ -45,10 +66,6 @@ const EnterpriseRouteGuard = ({ children }) => {
     if (currentUrl === 'home' && userRole === 'admin') return children;
     if (currentUrl === 'dashboard_staff' && userRole === 'staff') return children;
     
-    // Jika ada role baru nanti, cukup tambahkan di bawah sini:
-    // if (currentUrl === 'dashboard_manager' && userRole === 'manager') return children;
-
-    // Jika mencoba akses rute role lain saat menu kosong, langsung blokir ke 403
     if (currentUrl === 'home' || currentUrl === 'dashboard_staff') {
       return <Navigate to="/403" replace />;
     }
@@ -56,12 +73,15 @@ const EnterpriseRouteGuard = ({ children }) => {
     return <PageLoader />;
   }
 
-  //  STRICT MATCHING ACCESS CONTROL (Setelah API Menu berhasil dimuat)
+  // STRICT MATCHING ACCESS CONTROL
   const hasAccess = menus.some(menu => {
+    // Pengecekan bersarang jika tipenya Folder
     if (menu.jenis === 'Folder' && menu.sub_menu) {
       return menu.sub_menu.some(sub => sub.url?.toLowerCase() === currentUrl);
     }
-    return menu.url?.toLowerCase() === currentUrl;
+    // Pengecekan jika tipe File (Ambil dari sub_menu pertama jika url utama kosong / '#')
+    const actualUrl = menu.url && menu.url !== '#' ? menu.url : menu.sub_menu?.[0]?.url;
+    return actualUrl?.toLowerCase() === currentUrl;
   });
 
   return hasAccess ? children : <Navigate to="/403" replace />;
@@ -70,7 +90,9 @@ const EnterpriseRouteGuard = ({ children }) => {
 function App() {
   const token = useSelector((state) => state.auth.token);
   const userRole = useSelector((state) => state.auth.user?.role?.toLowerCase());
-  const menus = useSelector((state) => state.menu.listMenu) || [];
+  
+  // 🚀 FIX 2: Ubah .listMenu menjadi .menus di sini juga
+  const menus = useSelector((state) => state.menu.menus) || [];
 
   const getRedirectPath = () => {
     if (userRole === 'admin') return '/home';
@@ -79,78 +101,90 @@ function App() {
   };
 
   return (
-    <Router>
-      {/*  Suspense menjamin UX tetap mulus saat browser mengunduh potongan file halaman */}
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* Rute Publik */}
-          <Route path="/" element={
-            <PublicRoutes>
-                <Login />
-              </PublicRoutes>
-          } />
+  <Router>
+    {/* Suspense menjamin UX tetap mulus saat browser mengunduh potongan file halaman */}
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        {/* Rute Publik */}
+        <Route path="/" element={
+          <PublicRoutes>
+            <Login />
+          </PublicRoutes>
+        } />
 
-          {/* Rute Sesi Terproteksi */}
-          <Route element={<ProtectedRoute />}>
-            <Route
-              path="/dashboard"
-              element={token ? <Navigate to={getRedirectPath()} replace /> : <Navigate to="/" replace />}
-            />
+        {/* Rute Sesi Terproteksi */}
+        <Route element={<ProtectedRoute />}>
+          <Route
+            path="/dashboard"
+            element={token ? <Navigate to={getRedirectPath()} replace /> : <Navigate to="/" replace />}
+          />
 
-            {/*  SECURITY FIX: Daftarkan Gerbang Utama secara Statis agar TIDAK MEMICU 404
-        Aksesnya tetap aman karena dibungkus ketat oleh EnterpriseRouteGuard */}
-            <Route
-              path="/home"
-              element={<EnterpriseRouteGuard>{COMPONENT_REGISTRY['home']}</EnterpriseRouteGuard>}
-            />
-            <Route
-              path="/dashboard_staff"
-              element={<EnterpriseRouteGuard>{COMPONENT_REGISTRY['dashboard_staff']}</EnterpriseRouteGuard>}
-            />
+          {/* 🚀 Gerbang Utama Statis (Sekarang menggunakan Wrapper agar konsisten jika dipanggil ulang) */}
+          <Route
+            path="/home"
+            element={<EnterpriseRouteGuard><DynamicPageWrapper componentName="home" /></EnterpriseRouteGuard>}
+          />
+          <Route
+            path="/dashboard_staff"
+            element={<EnterpriseRouteGuard><DynamicPageWrapper componentName="dashboard_staff" /></EnterpriseRouteGuard>}
+          />
 
-            {/* 🚀 AUTOMATED DYNAMIC ROUTING ENGINE (Untuk Sub-menu CRUD lainnya) */}
-            {menus?.map((menu) => {
-              if (menu.jenis === 'Folder' && menu.sub_menu) {
-                return menu.sub_menu.map((sub) => {
-                  const pName = sub.path?.toLowerCase();
-                  const uPath = sub.url?.toLowerCase();
+          {/* 🚀 AUTOMATED DYNAMIC ROUTING ENGINE */}
+          {menus?.map((menu) => {
+            // KONDISI A: JIKA MENU ADALAH FOLDER (Banyak Sub-menu)
+            if (menu.jenis === 'Folder' && menu.sub_menu) {
+              return menu.sub_menu.map((sub) => {
+                const uPath = sub.url?.toLowerCase();
+                const pName = (sub.path || sub.url)?.toLowerCase();
 
-                  // Skip jika ada sub_menu yang url-nya tidak sengaja dinamai 'home' atau 'dashboard_staff'
-                  if (uPath === 'home' || uPath === 'dashboard_staff') return null;
+                if (uPath === 'home' || uPath === 'dashboard_staff') return null;
 
-                  return (
-                    <Route
-                      key={sub.id}
-                      path={`/${uPath}`}
-                      element={<EnterpriseRouteGuard>{COMPONENT_REGISTRY[pName] || <Navigate to="/404" replace />}</EnterpriseRouteGuard>}
-                    />
-                  );
-                });
-              }
+                return (
+                  <Route
+                    key={`sub-${sub.id}`}
+                    path={`/${uPath}`}
+                    element={
+                      <EnterpriseRouteGuard>
+                        {/* 🚀 GANTI DI SINI: Menggunakan DynamicPageWrapper */}
+                        <DynamicPageWrapper componentName={pName} />
+                      </EnterpriseRouteGuard>
+                    }
+                  />
+                );
+              });
+            }
 
-              const pName = menu.path?.toLowerCase();
-              const uPath = menu.url?.toLowerCase();
+            // KONDISI B: JIKA MENU ADALAH FILE SINGLE (Seperti Menu Dashboard / Master Menu Anda)
+            const actualUrl = menu.url && menu.url !== '#' ? menu.url : menu.sub_menu?.[0]?.url || '';
+            const actualPath = menu.path ? menu.path : actualUrl;
 
-              // Skip karena sudah kita deklarasikan secara manual di atas
-              if (uPath === 'home' || uPath === 'dashboard_staff') return null;
+            const uPath = actualUrl.toLowerCase();
+            const pName = actualPath.toLowerCase();
 
-              return (
-                <Route
-                  key={menu.id}
-                  path={`/${uPath}`}
-                  element={<EnterpriseRouteGuard>{COMPONENT_REGISTRY[pName] || <Navigate to="/404" replace />}</EnterpriseRouteGuard>}
-                />
-              );
-            })}
-          </Route>
+            if (uPath === 'home' || uPath === 'dashboard_staff' || !uPath) return null;
 
-          {/* Halaman Status Error */}
-          <Route path="/403" element={<Error403 />} />
-          <Route path="*" element={<main style={{ padding: '40px', textAlign: 'center' }}><h1>404: Not Found</h1></main>} />
-        </Routes>
-      </Suspense>
-    </Router>
-  );
+            return (
+              <Route
+                key={`menu-${menu.id}`}
+                path={`/${uPath}`}
+                element={
+                  <EnterpriseRouteGuard>
+                    {/* 🚀 GANTI DI SINI JUGA: Menggunakan DynamicPageWrapper */}
+                    <DynamicPageWrapper componentName={pName} />
+                  </EnterpriseRouteGuard>
+                }
+              />
+            );
+          })}
+        </Route>
+
+        {/* Halaman Status Error */}
+        <Route path="/403" element={<Error403 />} />
+        <Route path="*" element={<Error404 />} />
+      </Routes>
+    </Suspense>
+  </Router>
+);
 }
 
 export default App;

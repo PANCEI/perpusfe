@@ -1,10 +1,9 @@
 import React from 'react';
-import DashboardLayout from '../../components/DashboardLayout';
 import { Book, Users, Repeat, AlertCircle } from 'lucide-react';
 
 const DashboardAdmin = () => {
   return (
-    <DashboardLayout role="Admin" userTitle="Super Admin">
+   
       <div className="space-y-6">
         <div className="grid grid-cols-4 gap-6">
           {[
@@ -33,7 +32,7 @@ const DashboardAdmin = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+
   );
 };
 
