@@ -1,19 +1,43 @@
 import React, { useState, useEffect } from 'react';
 // import Sidebar from './Sidebar';
+import { useSelector } from 'react-redux';
 import Sidebar from './../components/sidebar/index';
 import { Bell, Menu } from 'lucide-react';
-
+import echo from '../utils/echo';
+import toast, { Toaster } from 'react-hot-toast';
+import { useWebSockets } from '../hooks/useWebSockets';
 const DashboardLayout = ({ children, role, userTitle }) => {
   // Set default true agar langsung terbuka di layar laptop saat pertama kali dimuat
   const [isOpen, setIsOpen] = useState(true); 
   const [paddingLeft, setPaddingLeft] = useState(256);
-
+const user = useSelector((state) => state.auth.user); // Ambil data user login
   // Sesuaikan status awal jika diakses via perangkat mobile sejak awal
   useEffect(() => {
     if (window.innerWidth < 1024) {
       setIsOpen(false);
     }
   }, []);
+  // useEffect(() => {
+  //   if (!user?.id) return;
+
+  //   // 🚀 Dengarkan channel khusus berdasarkan ID User yang sedang login
+  //   echo.channel(`notification-channel.${user.id}`)
+  //       .listen('.MenuNotification', (data) => {
+  //           console.log("Notifikasi Masuk:", data);
+            
+  //           // Tampilkan pop-up melayang di layar browser detik itu juga!
+  //           toast.success(data.message, {
+  //             duration: 5000,
+  //             position: 'top-right',
+  //           });
+  //       });
+
+  //   // Clean up koneksi saat user logout / komponen di-unmount
+  //   return () => {
+  //       echo.leaveChannel(`notification-channel.${user.id}`);
+  //   };
+  // }, [user?.id]);
+  useWebSockets();
 
   // Memantau perubahan ukuran sidebar secara real-time (baik karena di-resize maupun di-toggle)
   useEffect(() => {
@@ -50,6 +74,7 @@ const DashboardLayout = ({ children, role, userTitle }) => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-x-hidden">
+      <Toaster />
       {/* Komponen Sidebar */}
       <Sidebar role={role} isOpen={isOpen} setIsOpen={setIsOpen} />
       

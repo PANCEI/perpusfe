@@ -180,7 +180,7 @@ function App() {
 
         {/* Halaman Status Error */}
         <Route path="/403" element={<Error403 />} />
-        <Route path="*" element={<Error404 />} />
+        <Route path="*" element={<Error404 />}   />
       </Routes>
     </Suspense>
   </Router>
