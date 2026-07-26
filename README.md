@@ -1,58 +1,108 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+🚀 Enterprise Real-Time Notification System (Laravel Reverb + React Echo)
+Repositori ini mencakup konfigurasi sistem notifikasi real-time menggunakan Laravel 11+ (Reverb) sebagai Backend Broadcast Server dan React (Vite) sebagai Frontend Client.
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+🖥️ 1. Backend Setup (Laravel)
+Sisi backend bertanggung jawab untuk memicu (trigger) Event dan memancarkannya lewat jalur WebSocket lokal menggunakan Laravel Reverb.
 
-## About Laravel
+📦 Dependensi yang Diinstal
+Di sisi Laravel, dependensi utama dikelola via Composer. Driver Pusher PHP dibutuhkan karena Reverb berjalan menggunakan protokol Pusher secara native.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+laravel/reverb: Server WebSocket bawaan Laravel berkinerja tinggi.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+pusher/pusher-php-server: SDK PHP untuk menjembatani broadcast event ke protokol Reverb.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+🛠️ Langkah Instalasi & Konfigurasi
+Aktifkan Ekstensi cURL di PHP
+Buka file php.ini Anda, cari dan hilangkan tanda titik koma (;) pada baris berikut:
 
-## Learning Laravel
+Ini, TOML
+extension=curl
+Jalankan Perintah Broadcasting
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Bash
+php artisan install:broadcasting
+Pilih driver reverb saat muncul pilihan di terminal.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Install Dependensi Driver Manual (Jika diperlukan)
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Bash
+composer require pusher/pusher-php-server
+composer dump-autoload
+Konfigurasi Environment (.env)
+Pastikan baris berikut sudah terisi dengan string non-null di .env Laravel:
 
-## Agentic Development
+Cuplikan kode
+BROADCAST_CONNECTION=reverb
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+REVERB_APP_ID=123456
+REVERB_APP_KEY=myreverbkey12345
+REVERB_APP_SECRET=myreverbsecret12345
+REVERB_HOST="127.0.0.1"
+REVERB_PORT=8080
+REVERB_SCHEME="http"
+Menjalankan Server WebSocket
+Buka terminal baru di folder backend, lalu jalankan:
 
-```bash
-composer require laravel/boost --dev
+Bash
+php artisan reverb:start
+💻 2. Frontend Setup (React Vite)
+Sisi frontend bertindak sebagai Client atau pendengar (Listener) yang menangkap sinyal WebSocket dari backend lalu menampilkannya ke layar user.
 
-php artisan boost:install
-```
+📦 Dependensi yang Diinstal
+Di sisi React, dependensi dikelola via NPM.
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+laravel-echo: Library JavaScript untuk berlangganan channel dan mendengarkan event WebSocket secara ringkas.
 
-## Contributing
+pusher-js: Driver penghubung client berbasis JavaScript (diperlukan oleh Laravel Echo).
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+react-hot-toast (Opsional): Library UI untuk memunculkan pop-up notifikasi melayang yang interaktif.
 
-## Code of Conduct
+🛠️ Langkah Instalasi & Konfigurasi
+Install Library via NPM
+Jalankan perintah ini di dalam direktori root proyek React Anda:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Bash
+npm install --save-dev laravel-echo pusher-js
+npm install react-hot-toast
+Konfigurasi Environment (.env)
+Buat atau sesuaikan file .env di proyek React Anda, samakan nilainya dengan kunci di Laravel:
 
-## Security Vulnerabilities
+Cuplikan kode
+VITE_REVERB_APP_KEY="myreverbkey12345"
+VITE_REVERB_HOST="localhost"
+VITE_REVERB_PORT=8080
+Inisialisasi Echo (src/utils/echo.js)
+Buat file instansiasi Echo agar bisa di-import secara global di komponen React:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+JavaScript
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 
-## License
+window.Pusher = Pusher;
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+const echo = new Echo({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST ?? 'localhost',
+    wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
+    wssPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+    enabledTransports: ['ws', 'wss'],
+});
+
+export default echo;
+Menjalankan Project Frontend
+
+Bash
+npm run dev
+⚡ Alur Pengujian Fitur Notifikasi
+Untuk memastikan sistem berjalan, skema pengujian dilakukan dengan:
+
+Memanggil Event di Laravel: event(new MenuNotificationEvent($message, $userId));
+
+Server Reverb menangkap pancaran data tersebut pada port 8080.
+
+Komponen React (misalnya di DashboardLayout) yang mendengarkan channel notification-channel.${userId} akan langsung memicu toast.success(data.message) muncul di layar browser detik itu juga tanpa perlu refresh halaman.
+
+💡 Catatan Tambahan Developer
+Jangan lupa jalankan php artisan reverb:start di terminal terpisah selama masa pengembangan (development) agar gerbang WebSocket lokal tetap terbuka menerima koneksi dari React.

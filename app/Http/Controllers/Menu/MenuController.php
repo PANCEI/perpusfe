@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Menu;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; //
+use Illuminate\Support\Facades\DB;
+use App\Events\SendNotification; // 🚀 1. PASTIKAN EVENT INI SUDAH DI-IMPORT DI ATAS
+
 class MenuController extends Controller
 {
-  public function getUserMenus(Request $request)
+    public function getUserMenus(Request $request)
     {
         $user = $request->user();
 
@@ -31,28 +33,23 @@ class MenuController extends Controller
         $formattedMenus = $menus->map(function ($menu) use ($user) {
             return [
                 'id' => $menu->id,
-                'name' => $menu->menu, // Kolom 'menu' sesuai gambar tabel menu sebelumnya
+                'name' => $menu->menu,
                 'jenis' => $menu->jenis,
-                // 'icon' => $menu->menu === 'Dashboard' ? 'LayoutDashboard' : 'FileText',
-                // 'url' => $menu->menu === 'Dashboard' ? '/dashboard' : '#',
 
                 // Proses pengecekan hak akses spesifik pada tingkat anak (Submenu)
                 'sub_menu' => $menu->submenus->map(function ($sub) use ($user) {
 
-                    // 🚀 Cari data izin di tabel user_permissions berdasarkan id_user & id_submenu
                     $permission = DB::table('user_permissions')
                         ->where('id_user', $user->id)
                         ->where('id_submenu', $sub->id)
                         ->first();
 
-                    // Kondisi jika data permission ditemukan di database
                     if ($permission) {
                         $canCreate = (bool) $permission->bisa_create;
                         $canRead   = (bool) $permission->bisa_read;
                         $canUpdate = (bool) $permission->bisa_update;
                         $canDelete = (bool) $permission->bisa_delete;
                     } else {
-                        // 🚀 Kondisi default jika data TIDAK ADA: hanya diberikan permission read saja
                         $canCreate = false;
                         $canRead   = true;
                         $canUpdate = false;
@@ -61,12 +58,10 @@ class MenuController extends Controller
 
                     return [
                         'id' => $sub->id,
-                        'name' => $sub->nama_submenu, // Sesuaikan dengan nama kolom asli di tabel submenu Anda
+                        'name' => $sub->nama_sub_menu,
                         'jenis' => 'File',
                         'icon' => $sub->icon ?? 'FileText',
                         'url' => $sub->url ?? '#',
-
-                        // 🔐 Menyuntikkan object permissions ke frontend React agar tombol Action bisa di-hide/show
                         'permissions' => [
                             'create' => $canCreate,
                             'read'   => $canRead,
@@ -78,11 +73,15 @@ class MenuController extends Controller
             ];
         });
 
+        // ===================================================================
+        // 🚀 2. TEMPATKAN PEMICU NOTIFIKASI DI SINI UNTUK UJI COBA REAL-TIME
+        // ===================================================================
+        $pesanUjiCoba = "Koneksi WebSocket Berhasil! Akun " . $user->name . " terhubung ke Reverb.";
+        event(new SendNotification($pesanUjiCoba, $user->id));
+        // ===================================================================
+
         return response()->json([
             'menus' => $formattedMenus
         ], 200);
     }
 }
-
-
-
