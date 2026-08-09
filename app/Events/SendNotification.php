@@ -4,26 +4,30 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast; // 🚀 WAJIB
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class SendNotification implements ShouldBroadcast // 🚀 Pastikan ada 'implements ShouldBroadcast'
+class SendNotification implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $message;
     public $userId;
+    public $type;
+    public $action;
+    public $menu;
 
-    // 1. Terima data dari Controller lewat constructor
-    public function __construct($message, $userId)
+    // Putar balik urutan: $message dulu, baru $userId (sama seperti Kode 1)
+    public function __construct($message, $userId, $type = null, $action = null, $menu = null)
     {
         $this->message = $message;
-        $this->userId = $userId;
+        $this->userId  = $userId;
+        $this->type    = $type;
+        $this->action  = $action;
+        $this->menu    = $menu;
     }
 
-    // 2. Tentukan nama Channel-nya (Kita pakai Public Channel dulu agar mudah ditest)
-        // 🚀 1. Channel harus mengarah ke "notification-channel.{id}"
     public function broadcastOn(): array
     {
         return [
@@ -31,9 +35,18 @@ class SendNotification implements ShouldBroadcast // 🚀 Pastikan ada 'implemen
         ];
     }
 
-    // 🚀 2. Nama Event harus "MenuNotification" (tanpa titik di Laravel)
     public function broadcastAs()
     {
         return 'MenuNotification';
+    }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'message' => $this->message,
+            'type'    => $this->type,
+            'action'  => $this->action,
+            'menu'    => $this->menu,
+        ];
     }
 }

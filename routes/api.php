@@ -19,7 +19,7 @@ Route::middleware(['auth:sanctum', 'token.timeout'])->group(function () {
     // Contoh Rute Manajemen Lainnya
     // Route::get('/sidebar-menu', [MenuController::class, 'index']);
     Route::get('/user/menus', [MenuController::class, 'getUserMenus']);
-    Route::get('/menu/list',[])
+    Route::get('/menu/list',[MenuList::class,'getMenuList']);
 
 
 });
