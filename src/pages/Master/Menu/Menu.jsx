@@ -1,59 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux'; // 1. Hook Redux
+import { useDispatch, useSelector } from 'react-redux';
 import { Plus } from 'lucide-react';
 import MenuTable from './MenuTable';
 import MenuModal from './MenuModal';
-
-// Action Redux Thunk
 import { getMenuListAction } from '../../../actions/menu/MenuList';
 
 const MasterMenu = () => {
   const dispatch = useDispatch();
 
-  // 2. Ambil data dari Redux Store (ganti 'menuList' jika nama reducer Anda berbeda di rootReducer)
-  const { items: menus = [], isLoading, error } = useSelector((state) => state.menuList || {});
+  // 🚀 PERBAIKAN: Ambil state menuList dengan aman
+const menuState = useSelector((state) => state.menuList);
+console.log('State menuList:', menuState); // Debugging: Periksa struktur state menuList
+// 🚀 PERBAIKAN: Ambil dari key 'items' sesuai struktur Reducer
+const menus = menuState?.items || [];
+const isLoading = menuState?.loading || menuState?.isLoading || false;
+const error = menuState?.error || null;
 
-  // State Pengendali Modal (Cukup simpan state UI lokal di sini)
+console.log('State menuList:', menus); // Sekarang akan berisi Array 2 item
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
 
-  // 3. Fetch data dari API saat halaman pertama kali dibuka
   useEffect(() => {
     dispatch(getMenuListAction()).catch((err) => {
       console.error('Gagal mengambil data menu:', err.message);
     });
   }, [dispatch]);
 
-  // Handler Buka Modal Tambah
   const handleAddClick = () => {
     setIsEditMode(false);
     setSelectedData({ id: '', menu: '', urutan: menus.length + 1, jenis: 'File' });
     setIsModalOpen(true);
   };
 
-  // Handler Buka Modal Edit
   const handleEditClick = (item) => {
     setIsEditMode(true);
     setSelectedData(item);
     setIsModalOpen(true);
   };
 
-  // Handler Hapus Data
   const handleDeleteClick = (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus menu ini?')) {
-      // TODO: Panggil dispatch(deleteMenuAction(id)) nanti untuk memicu API DELETE
       console.log('Delete ID:', id);
     }
   };
 
-  // Handler Kirim Data Form (Insert / Update)
   const handleModalSubmit = (formData) => {
     if (isEditMode) {
-      // TODO: Panggil dispatch(updateMenuAction(formData)) nanti untuk memicu API PUT/PATCH
       console.log('Update Data:', formData);
     } else {
-      // TODO: Panggil dispatch(createMenuAction(formData)) nanti untuk memicu API POST
       console.log('Create Data:', formData);
     }
     setIsModalOpen(false);
@@ -61,7 +56,6 @@ const MasterMenu = () => {
 
   return (
     <div className="p-6 bg-slate-50 min-h-screen">
-      {/* Header Halaman */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Master Menu</h1>
@@ -77,13 +71,11 @@ const MasterMenu = () => {
         </button>
       </div>
 
-      {/* Tampilan Loading / Error / Data Tabel */}
       {isLoading ? (
         <div className="text-center py-12 text-slate-500 font-medium">Memuat data menu...</div>
       ) : error ? (
         <div className="text-center py-12 text-red-500 font-medium">{error}</div>
       ) : (
-        /* Komponen Tabel */
         <MenuTable 
           menus={menus} 
           onEdit={handleEditClick} 
@@ -91,7 +83,6 @@ const MasterMenu = () => {
         />
       )}
 
-      {/* Komponen Modal */}
       <MenuModal 
         isOpen={isModalOpen}
         isEditMode={isEditMode}
